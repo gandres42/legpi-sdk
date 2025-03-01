@@ -1,8 +1,9 @@
 import time
 import RPi.GPIO as GPIO
-from .BusServoCmd import *
+from BusServoCmd import *
 from rpi_ws281x import PixelStrip
 from rpi_ws281x import Color as PixelColor
+import math
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -20,11 +21,31 @@ __MAX_SERVO_PULSE = 870
 __MIN_GRIPPER_PULSE = 50
 __MAX_GRIPPER_PULSE = 610
 
+PULSE_LIMITS = {
+    6: (0, 1000),
+    5: (130, 870),
+    4: (0, 1000),
+    3: (47, 1000),
+    2: (0, 1000),
+    1: (50, 610)
+}
+
 RGB = PixelStrip(__RGB_COUNT, __RGB_PIN, __RGB_FREQ_HZ, __RGB_DMA, __RGB_INVERT, __RGB_BRIGHTNESS, __RGB_CHANNEL)
 RGB.begin()
 for i in range(RGB.numPixels()):
     RGB.setPixelColor(i, PixelColor(0,0,0))
     RGB.show()
+
+def __angle_to_pulse(degree):
+    # Apply the linear transformation
+    scaled_value = ((degree + 90) / 180) * (870 - 130) + 130
+    return int(scaled_value)
+
+def __pulse_to_angle(pulse):
+    # Apply the inverse transformation
+    degree = ((pulse - 130) / (870 - 130)) * 180 - 90
+    return int(degree)
+
 
 def setServoID(oldid, newid):
     """
@@ -222,19 +243,22 @@ def getServoLoadStatus(id):
         if msg is not None:
             return msg
 
-def setMotorDegree(motor_id, degree, velocity=30, blocking=True):
+def setMotorDegree(motor_id, angle, velocity=50, blocking=True, degrees=True):
+    if not degrees: angle = math.degrees(angle)
+    
     # unique motor joint restraints
     if motor_id == 1: return
-    if motor_id in [3, 5, 6]: degree = -degree
+    if motor_id in [3, 5, 6]: angle = -angle
     
     # convert velocity to ms
-    start_degree = (getServoPulse(motor_id) - 130) * (180 / (870 - 130)) - 90
-    ms = int(abs(degree - start_degree) / velocity * 1000)
+    # start_degree = (getServoPulse(motor_id) - 130) * (180 / (870 - 130)) - 90
+    start_degree = __pulse_to_angle(getServoPulse(motor_id))
+    ms = int(abs(angle - start_degree) / velocity * 1000)
     
     # map degrees into pulse
-    target_pulse = int((degree + 90) * ((870 - 130) / 180) + 130)
-    if target_pulse < __MIN_SERVO_PULSE: target_pulse = __MIN_SERVO_PULSE
-    if target_pulse > __MAX_SERVO_PULSE: target_pulse = __MAX_SERVO_PULSE
+    target_pulse = __angle_to_pulse(angle)
+    if target_pulse < PULSE_LIMITS[motor_id][0]: target_pulse = PULSE_LIMITS[motor_id][0]
+    if target_pulse > PULSE_LIMITS[motor_id][1]: target_pulse = PULSE_LIMITS[motor_id][1]
 
     # adjust travel time based on actual remaining distance
     setServoPulse(motor_id, target_pulse, ms)
