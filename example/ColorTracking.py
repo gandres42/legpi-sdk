@@ -4,13 +4,10 @@ import sys
 sys.path.append('/home/gavin/LegPi/')
 import cv2
 import time
-import Camera
 import threading
-from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
-from CameraCalibration.CalibrationConfig import *
+import Board as Board
 
 if sys.version_info.major == 2:
     print('Please run this program with python3!')
