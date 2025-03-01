@@ -4,6 +4,8 @@ from BusServoCmd import *
 from rpi_ws281x import PixelStrip
 from rpi_ws281x import Color as PixelColor
 import math
+from threading import Thread, Lock
+
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -16,8 +18,6 @@ __RGB_BRIGHTNESS = 120
 __RGB_CHANNEL = 0
 __RGB_INVERT = False
 
-__MIN_SERVO_PULSE = 130
-__MAX_SERVO_PULSE = 870
 __MIN_GRIPPER_PULSE = 50
 __MAX_GRIPPER_PULSE = 610
 
@@ -29,6 +29,8 @@ PULSE_LIMITS = {
     2: (0, 1000),
     1: (50, 610)
 }
+
+SERVO_PULSE_LOCK = Lock()
 
 RGB = PixelStrip(__RGB_COUNT, __RGB_PIN, __RGB_FREQ_HZ, __RGB_DMA, __RGB_INVERT, __RGB_BRIGHTNESS, __RGB_CHANNEL)
 RGB.begin()
@@ -261,8 +263,12 @@ def setMotorDegree(motor_id, angle, velocity=50, blocking=True, degrees=True):
     if target_pulse > PULSE_LIMITS[motor_id][1]: target_pulse = PULSE_LIMITS[motor_id][1]
 
     # adjust travel time based on actual remaining distance
-    setServoPulse(motor_id, target_pulse, ms)
-    if blocking: time.sleep(ms / 1000)
+    Thread(target=setServoPulse, args=(motor_id, target_pulse, ms)).start()
+    if blocking:
+        time.sleep(ms / 1000)
+    else:
+        time.sleep(0.02)
+
 
 def setGripperPercent(perc, velocity=75, blocking=True):    
     # convert velocity to ms
