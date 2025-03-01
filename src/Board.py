@@ -210,12 +210,6 @@ def getServoVin(id):
         if msg is not None:
             return msg
 
-def restBusServoPulse(oldid):
-    # 舵机清零偏差和P值中位（500）
-    serial_servo_set_deviation(oldid, 0)    # 清零偏差
-    time.sleep(0.1)
-    serial_serro_wirte_cmd(oldid, LOBOT_SERVO_MOVE_TIME_WRITE, 500, 100)    # 中位
-
 ##Power loss
 def unloadBusServo(id):
     serial_serro_wirte_cmd(id, LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 0)
