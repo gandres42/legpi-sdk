@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 SCAN_COLORS = ['blue', 'red', 'green']
 
@@ -36,26 +37,26 @@ def find_centers(frame, color):
                 centers.append((cx, cy))
     return centers
 
+if __name__ == "__main__":
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+        centers = []
+        for color in SCAN_COLORS:
+            centers = centers + find_centers(frame, color)
 
-    centers = []
-    for color in SCAN_COLORS:
-        centers = centers + find_centers(frame, color)
+        for cx, cy in centers:
+            cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)  
 
-    for cx, cy in centers:
-        cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)  
+        # Show the processed frame
+        cv2.imshow("Red Object Detection", frame)
 
-    # Show the processed frame
-    cv2.imshow("Red Object Detection", frame)
+        # Exit on pressing 'q'
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    # Exit on pressing 'q'
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release resources
-cap.release()
-cv2.destroyAllWindows()
+    # Release resources
+    cap.release()
+    cv2.destroyAllWindows()
