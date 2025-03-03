@@ -11,7 +11,7 @@ def resting_pose():
     times.append(Board.setMotorAngle(4, 90, blocking=False))
     times.append(Board.setMotorAngle(5, -45, velocity=25, blocking=False))
     times.append(Board.setMotorAngle(6, 0, blocking=False))
-    time.sleep(max(times) + .02)
+    time.sleep(max(times))
 
 def upright_pose():
     times = []
@@ -20,7 +20,7 @@ def upright_pose():
     times.append(Board.setMotorAngle(4, 0, blocking=False))
     times.append(Board.setMotorAngle(5, 0, velocity=25, blocking=False))
     times.append(Board.setMotorAngle(6, 0, blocking=False))
-    time.sleep(max(times) + .02)
+    time.sleep(max(times))
 
 # ik = IK()
 # angles = ik.getRotationAngle((0, 18, 7), 0)

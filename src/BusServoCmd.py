@@ -36,19 +36,16 @@ LOBOT_SERVO_LED_CTRL_READ        = 34
 LOBOT_SERVO_LED_ERROR_WRITE      = 35
 LOBOT_SERVO_LED_ERROR_READ       = 36
 
-pi = pigpio.pi()  # 初始化 pigpio库
-serialHandle = serial.Serial("/dev/ttyS0", 115200)  # 初始化串口， 波特率为115200
+pi = pigpio.pi()  # Initialize the pigpio library
+serialHandle = serial.Serial("/dev/ttyS0", 115200)  # Initialize the serial port, the baud rate is 115200
 
 rx_pin = 4
 tx_pin = 27
 
-def portInit():  # 配置用到的IO口
-    pi.set_mode(rx_pin, pigpio.OUTPUT)  # 配置RX_CON 即 GPIO17 为输出
-    pi.write(rx_pin, 0)
-    pi.set_mode(tx_pin, pigpio.OUTPUT)  # 配置TX_CON 即 GPIO27 为输出
-    pi.write(tx_pin, 1)
-
-portInit()
+pi.set_mode(rx_pin, pigpio.OUTPUT)  # 配置RX_CON 即 GPIO17 为输出
+pi.write(rx_pin, 0)
+pi.set_mode(tx_pin, pigpio.OUTPUT)  # 配置TX_CON 即 GPIO27 为输出
+pi.write(tx_pin, 1)
 
 def portWrite():  # 配置单线串口为输出
     pi.write(tx_pin, 1)  # 拉高TX_CON 即 GPIO27
@@ -67,12 +64,12 @@ def portRest():
     time.sleep(0.1)
 
 def checksum(buf):
-    # 计算校验和
+    # Calculate the checksum
     sum = 0x00
-    for b in buf:  # 求和
+    for b in buf:  # Ask for sum
         sum += b
-    sum = sum - 0x55 - 0x55  # 去掉命令开头的两个 0x55
-    sum = ~sum  # 取反
+    sum = sum - 0x55 - 0x55  # Remove the two beginnings of the command 0x55
+    sum = ~sum  # Reverse
     return sum & 0xff
 
 def serial_serro_wirte_cmd(id=None, w_cmd=None, dat1=None, dat2=None):
@@ -125,7 +122,7 @@ def serial_servo_read_cmd(id=None, r_cmd=None):
     buf.append(r_cmd)  # 指令
     buf.append(checksum(buf))  # 校验和
     serialHandle.write(buf)  # 发送
-    time.sleep(0.00034)
+    time.sleep(0.0007)
 
 def serial_servo_get_rmsg(cmd):
     '''

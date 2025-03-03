@@ -232,7 +232,6 @@ def setMotorAngle(motor_id, angle, velocity=50, blocking=True, degrees=True):
     execution_s = execution_ms / 1000
 
     setServoPulse(motor_id, target_pulse, execution_ms)
-    time.sleep(0.02)
     
     if blocking: time.sleep(execution_s)
         
