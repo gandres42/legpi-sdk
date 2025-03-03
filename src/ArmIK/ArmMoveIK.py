@@ -6,7 +6,7 @@ import time
 import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
-from InverseKinematics import *
+from inverse_kinematics import *
 from ArmIK.Transform import getAngle
 from mpl_toolkits.mplot3d import Axes3D
 from HiwonderSDK.Board import setBusServoPulse, getBusServoPulse

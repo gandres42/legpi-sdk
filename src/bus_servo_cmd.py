@@ -47,11 +47,11 @@ pi.write(rx_pin, 0)
 pi.set_mode(tx_pin, pigpio.OUTPUT)  # 配置TX_CON 即 GPIO27 为输出
 pi.write(tx_pin, 1)
 
-def portWrite():  # 配置单线串口为输出
+def portWrite():  # Configure the single-line serial port as output
     pi.write(tx_pin, 1)  # 拉高TX_CON 即 GPIO27
     pi.write(rx_pin, 0)  # 拉低RX_CON 即 GPIO17
 
-def portRead():  # 配置单线串口为输入
+def portRead():  # Configure the single-line serial port as input
     pi.write(rx_pin, 1)  # 拉高RX_CON 即 GPIO17
     pi.write(tx_pin, 0)  # 拉低TX_CON 即 GPIO27
 
@@ -74,7 +74,7 @@ def checksum(buf):
 
 def serial_serro_wirte_cmd(id=None, w_cmd=None, dat1=None, dat2=None):
     '''
-    写指令
+    Write instructions
     :param id:
     :param w_cmd:
     :param dat1:
@@ -109,7 +109,7 @@ def serial_serro_wirte_cmd(id=None, w_cmd=None, dat1=None, dat2=None):
 
 def serial_servo_read_cmd(id=None, r_cmd=None):
     '''
-    发送读取命令
+    Send read command
     :param id:
     :param r_cmd:
     :param dat:
@@ -126,9 +126,9 @@ def serial_servo_read_cmd(id=None, r_cmd=None):
 
 def serial_servo_get_rmsg(cmd):
     '''
-    # 获取指定读取命令的数据
-    :param cmd: 读取命令
-    :return: 数据
+    # Get the data of the specified read command
+    :param cmd: Read command
+    :return: data
     '''
     serialHandle.flushInput()  # 清空接收缓存
     portRead()  # 将单线串口配置为输入

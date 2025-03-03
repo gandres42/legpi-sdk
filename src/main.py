@@ -1,25 +1,25 @@
-import Board as Board
-from InverseKinematics import IK
+import board as board
+from inverse_kinematics import IK
 import math
 import random
 import time
 
 def resting_pose():
     times = []
-    times.append(Board.setMotorAngle(2, 0, blocking=False))
-    times.append(Board.setMotorAngle(3, 90, blocking=False))
-    times.append(Board.setMotorAngle(4, 90, blocking=False))
-    times.append(Board.setMotorAngle(5, -45, velocity=25, blocking=False))
-    times.append(Board.setMotorAngle(6, 0, blocking=False))
+    times.append(board.setMotorAngle(2, 0, blocking=False))
+    times.append(board.setMotorAngle(3, 90, blocking=False))
+    times.append(board.setMotorAngle(4, 90, blocking=False))
+    times.append(board.setMotorAngle(5, -45, velocity=25, blocking=False))
+    times.append(board.setMotorAngle(6, 0, blocking=False))
     time.sleep(max(times))
 
 def upright_pose():
     times = []
-    times.append(Board.setMotorAngle(2, 0, blocking=False))
-    times.append(Board.setMotorAngle(3, 0, blocking=False))
-    times.append(Board.setMotorAngle(4, 0, blocking=False))
-    times.append(Board.setMotorAngle(5, 0, velocity=25, blocking=False))
-    times.append(Board.setMotorAngle(6, 0, blocking=False))
+    times.append(board.setMotorAngle(2, 0, blocking=False))
+    times.append(board.setMotorAngle(3, 0, blocking=False))
+    times.append(board.setMotorAngle(4, 0, blocking=False))
+    times.append(board.setMotorAngle(5, 0, velocity=25, blocking=False))
+    times.append(board.setMotorAngle(6, 0, blocking=False))
     time.sleep(max(times))
 
 # ik = IK()
