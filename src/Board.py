@@ -231,9 +231,8 @@ def setMotorAngle(motor_id, angle, velocity=50, blocking=True, degrees=True):
     # adjust travel time based on actual remaining distance
     execution_s = execution_ms / 1000
 
-    with __SERVO_PULSE_LOCK:
-        Thread(target=setServoPulse, args=(motor_id, target_pulse, execution_ms)).start()
-        time.sleep(0.03)
+    setServoPulse(motor_id, target_pulse, execution_ms)
+    time.sleep(0.02)
     
     if blocking: time.sleep(execution_s)
         
