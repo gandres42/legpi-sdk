@@ -21,7 +21,7 @@ __RGB_INVERT = False
 __MIN_GRIPPER_PULSE = 50
 __MAX_GRIPPER_PULSE = 610
 
-PULSE_LIMITS = {
+__PULSE_LIMITS = {
     6: (0, 1000),
     5: (130, 870),
     4: (0, 1000),
@@ -29,8 +29,8 @@ PULSE_LIMITS = {
     2: (0, 1000),
     1: (50, 610)
 }
-
-SERVO_PULSE_LOCK = Lock()
+__SERVO_PULSE_LOCK = Lock()
+__TIME_OUT = 50
 
 RGB = PixelStrip(__RGB_COUNT, __RGB_PIN, __RGB_FREQ_HZ, __RGB_DMA, __RGB_INVERT, __RGB_BRIGHTNESS, __RGB_CHANNEL)
 RGB.begin()
@@ -48,8 +48,7 @@ def __pulse_to_angle(pulse):
     degree = ((pulse - 130) / (870 - 130)) * 180 - 90
     return int(degree)
 
-
-def setServoID(oldid, newid):
+def __setServoID(oldid, newid):
     """
     Configure the servo id number, the factory default is 1
     :param oldid: The original id, the factory default is 1
@@ -57,7 +56,7 @@ def setServoID(oldid, newid):
     """
     serial_serro_wirte_cmd(oldid, LOBOT_SERVO_ID_WRITE, newid)
 
-def getServoID(id=None):
+def __getServoID(id=None):
     """
     Read the serial port servo id
     :param id: default is empty
@@ -70,6 +69,128 @@ def getServoID(id=None):
         else:
             serial_servo_read_cmd(id, LOBOT_SERVO_ID_READ)
         msg = serial_servo_get_rmsg(LOBOT_SERVO_ID_READ)
+        if msg is not None:
+            return msg
+
+def __stopBusServo(id=None):
+    '''
+    Stop the servo operation
+    :param id:
+    :return:
+    '''
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_MOVE_STOP)
+
+def __setServoDeviation(id, d=0):
+    """
+    Adjust deviation
+    :param id: servo id
+    :param d: deviation
+    """
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_ANGLE_OFFSET_ADJUST, d)
+
+def __saveBusServoDeviation(id):
+    """
+    Configuration deviation, power down protection
+    :param id: Servo ID
+    """
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_ANGLE_OFFSET_WRITE)
+
+def __getServoDeviation(id):
+    '''
+    Read the deviation value
+    :param id: Servo number
+    :return:
+    '''
+    count = 0
+    while True:
+        serial_servo_read_cmd(id, LOBOT_SERVO_ANGLE_OFFSET_READ)
+        msg = serial_servo_get_rmsg(LOBOT_SERVO_ANGLE_OFFSET_READ)
+        count += 1
+        if msg is not None:
+            return msg
+        if count > __TIME_OUT:
+            return None
+
+def __setServoAngleLimit(id, low, high):
+    '''
+    Set the rotation range of the servo
+    :param id:
+    :param low:
+    :param high:
+    :return:
+    '''
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_ANGLE_LIMIT_WRITE, low, high)
+
+def __getServoAngleLimit(id):
+    '''
+    读取舵机转动范围
+    :param id:
+    :return: 返回元祖 0： 低位  1： 高位
+    '''
+    
+    while True:
+        serial_servo_read_cmd(id, LOBOT_SERVO_ANGLE_LIMIT_READ)
+        msg = serial_servo_get_rmsg(LOBOT_SERVO_ANGLE_LIMIT_READ)
+        if msg is not None:
+            count = 0
+            return msg
+
+def __setServoVinLimit(id, low, high):
+    '''
+    设置舵机电压范围
+    :param id:
+    :param low:
+    :param high:
+    :return:
+    '''
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_VIN_LIMIT_WRITE, low, high)
+
+def __getServoVinLimit(id):
+    '''
+    读取舵机转动范围
+    :param id:
+    :return: 返回元祖 0： 低位  1： 高位
+    '''
+    while True:
+        serial_servo_read_cmd(id, LOBOT_SERVO_VIN_LIMIT_READ)
+        msg = serial_servo_get_rmsg(LOBOT_SERVO_VIN_LIMIT_READ)
+        if msg is not None:
+            return msg
+
+def __setServoMaxTemp(id, m_temp):
+    '''
+    设置舵机最高温度报警
+    :param id:
+    :param m_temp:
+    :return:
+    '''
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_TEMP_MAX_LIMIT_WRITE, m_temp)
+
+def __getServoTempLimit(id):
+    '''
+    读取舵机温度报警范围
+    :param id:
+    :return:
+    '''
+    
+    while True:
+        serial_servo_read_cmd(id, LOBOT_SERVO_TEMP_MAX_LIMIT_READ)
+        msg = serial_servo_get_rmsg(LOBOT_SERVO_TEMP_MAX_LIMIT_READ)
+        if msg is not None:
+            return msg
+
+def __unloadBusServo(id):
+    serial_serro_wirte_cmd(id, LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 0)
+
+def getServoPulse(id):
+    '''
+    读取舵机当前位置
+    :param id:
+    :return:
+    '''
+    while True:
+        serial_servo_read_cmd(id, LOBOT_SERVO_POS_READ)
+        msg = serial_servo_get_rmsg(LOBOT_SERVO_POS_READ)
         if msg is not None:
             return msg
 
@@ -87,127 +208,36 @@ def setServoPulse(id, pulse, use_time):
     use_time = 30000 if use_time > 30000 else use_time
     serial_serro_wirte_cmd(id, LOBOT_SERVO_MOVE_TIME_WRITE, pulse, use_time)
 
-def stopBusServo(id=None):
-    '''
-    Stop the servo operation
-    :param id:
-    :return:
-    '''
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_MOVE_STOP)
+def getMotorAngle(id):
+    return __pulse_to_angle(getServoPulse(id))
 
-def setServoDeviation(id, d=0):
-    """
-    Adjust deviation
-    :param id: servo id
-    :param d: deviation
-    """
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_ANGLE_OFFSET_ADJUST, d)
-
-def saveBusServoDeviation(id):
-    """
-    配置偏差，掉电保护
-    :param id: 舵机id
-    """
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_ANGLE_OFFSET_WRITE)
-
-time_out = 50
-def getServoDeviation(id):
-    '''
-    读取偏差值
-    :param id: 舵机号
-    :return:
-    '''
-    # 发送读取偏差指令
-    count = 0
-    while True:
-        serial_servo_read_cmd(id, LOBOT_SERVO_ANGLE_OFFSET_READ)
-        # 获取
-        msg = serial_servo_get_rmsg(LOBOT_SERVO_ANGLE_OFFSET_READ)
-        count += 1
-        if msg is not None:
-            return msg
-        if count > time_out:
-            return None
-
-def setServoAngleLimit(id, low, high):
-    '''
-    设置舵机转动范围
-    :param id:
-    :param low:
-    :param high:
-    :return:
-    '''
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_ANGLE_LIMIT_WRITE, low, high)
-
-def getServoAngleLimit(id):
-    '''
-    读取舵机转动范围
-    :param id:
-    :return: 返回元祖 0： 低位  1： 高位
-    '''
+def setMotorAngle(motor_id, angle, velocity=50, blocking=True, degrees=True):
+    if not degrees: angle = math.degrees(angle)
     
-    while True:
-        serial_servo_read_cmd(id, LOBOT_SERVO_ANGLE_LIMIT_READ)
-        msg = serial_servo_get_rmsg(LOBOT_SERVO_ANGLE_LIMIT_READ)
-        if msg is not None:
-            count = 0
-            return msg
-
-def setServoVinLimit(id, low, high):
-    '''
-    设置舵机电压范围
-    :param id:
-    :param low:
-    :param high:
-    :return:
-    '''
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_VIN_LIMIT_WRITE, low, high)
-
-def getServoVinLimit(id):
-    '''
-    读取舵机转动范围
-    :param id:
-    :return: 返回元祖 0： 低位  1： 高位
-    '''
-    while True:
-        serial_servo_read_cmd(id, LOBOT_SERVO_VIN_LIMIT_READ)
-        msg = serial_servo_get_rmsg(LOBOT_SERVO_VIN_LIMIT_READ)
-        if msg is not None:
-            return msg
-
-def setServoMaxTemp(id, m_temp):
-    '''
-    设置舵机最高温度报警
-    :param id:
-    :param m_temp:
-    :return:
-    '''
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_TEMP_MAX_LIMIT_WRITE, m_temp)
-
-def getServoTempLimit(id):
-    '''
-    读取舵机温度报警范围
-    :param id:
-    :return:
-    '''
+    # unique motor joint restraints
+    if motor_id == 1: return
+    if motor_id in [3, 5, 6]: angle = -angle
     
-    while True:
-        serial_servo_read_cmd(id, LOBOT_SERVO_TEMP_MAX_LIMIT_READ)
-        msg = serial_servo_get_rmsg(LOBOT_SERVO_TEMP_MAX_LIMIT_READ)
-        if msg is not None:
-            return msg
+    # convert velocity to ms
+    # start_degree = (getServoPulse(motor_id) - 130) * (180 / (870 - 130)) - 90
+    start_degree = __pulse_to_angle(getServoPulse(motor_id))
+    execution_ms = int(abs(angle - start_degree) / velocity * 1000)
+    
+    # map degrees into pulse
+    target_pulse = __angle_to_pulse(angle)
+    if target_pulse < __PULSE_LIMITS[motor_id][0]: target_pulse = __PULSE_LIMITS[motor_id][0]
+    if target_pulse > __PULSE_LIMITS[motor_id][1]: target_pulse = __PULSE_LIMITS[motor_id][1]
 
-def getServoPulse(id):
-    '''
-    读取舵机当前位置
-    :param id:
-    :return:
-    '''
-    while True:
-        serial_servo_read_cmd(id, LOBOT_SERVO_POS_READ)
-        msg = serial_servo_get_rmsg(LOBOT_SERVO_POS_READ)
-        if msg is not None:
-            return msg
+    # adjust travel time based on actual remaining distance
+    execution_s = execution_ms / 1000
+
+    with __SERVO_PULSE_LOCK:
+        Thread(target=setServoPulse, args=(motor_id, target_pulse, execution_ms)).start()
+        time.sleep(0.03)
+    
+    if blocking: time.sleep(execution_s)
+        
+    return execution_s
 
 def getServoTemp(id):
     '''
@@ -233,42 +263,12 @@ def getServoVin(id):
         if msg is not None:
             return msg
 
-##Power loss
-def unloadBusServo(id):
-    serial_serro_wirte_cmd(id, LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 0)
-
-##Whether it is powered down
 def getServoLoadStatus(id):
     while True:
         serial_servo_read_cmd(id, LOBOT_SERVO_LOAD_OR_UNLOAD_READ)
         msg = serial_servo_get_rmsg(LOBOT_SERVO_LOAD_OR_UNLOAD_READ)
         if msg is not None:
             return msg
-
-def setMotorDegree(motor_id, angle, velocity=50, blocking=True, degrees=True):
-    if not degrees: angle = math.degrees(angle)
-    
-    # unique motor joint restraints
-    if motor_id == 1: return
-    if motor_id in [3, 5, 6]: angle = -angle
-    
-    # convert velocity to ms
-    # start_degree = (getServoPulse(motor_id) - 130) * (180 / (870 - 130)) - 90
-    start_degree = __pulse_to_angle(getServoPulse(motor_id))
-    ms = int(abs(angle - start_degree) / velocity * 1000)
-    
-    # map degrees into pulse
-    target_pulse = __angle_to_pulse(angle)
-    if target_pulse < PULSE_LIMITS[motor_id][0]: target_pulse = PULSE_LIMITS[motor_id][0]
-    if target_pulse > PULSE_LIMITS[motor_id][1]: target_pulse = PULSE_LIMITS[motor_id][1]
-
-    # adjust travel time based on actual remaining distance
-    Thread(target=setServoPulse, args=(motor_id, target_pulse, ms)).start()
-    if blocking:
-        time.sleep(ms / 1000)
-    else:
-        time.sleep(0.02)
-
 
 def setGripperPercent(perc, velocity=75, blocking=True):    
     # convert velocity to ms
