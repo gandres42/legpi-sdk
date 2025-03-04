@@ -1,6 +1,6 @@
 import time
 import RPi.GPIO as GPIO
-from bus_servo_cmd import *
+from armpy.control.BusServoCmd import *
 from rpi_ws281x import PixelStrip
 from rpi_ws281x import Color as PixelColor
 import math
@@ -281,3 +281,7 @@ def setGripperPercent(perc, velocity=75, blocking=True):
     # adjust travel time based on actual remaining distance
     setServoPulse(1, target_pulse, ms)
     if blocking: time.sleep(ms / 1000)
+
+def setBuzzer(new_state):
+    GPIO.setup(31, GPIO.OUT)
+    GPIO.output(31, new_state)

@@ -1,20 +1,15 @@
 #!/usr/bin/python3
-# coding=utf8
 import sys
-sys.path.append('/home/gavin/LegPi/')
 import cv2
 import time
-import Camera
 import threading
-from LABConfig import *
-from ArmIK.Transform import *
-from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
-from CameraCalibration.CalibrationConfig import *
 
-if sys.version_info.major == 2:
-    print('Please run this program with python3!')
-    sys.exit(0)
+sys.path.append('/home/gavin/legpi-sdk')
+
+from armpy.armik.ArmMoveIK import *
+from armpy.armik.Transform import *
+import armpy.control.Board as Board
+import armpy.perception.Camera as Camera
 
 AK = ArmIK()
 
@@ -26,8 +21,16 @@ range_rgb = {
     'white': (255, 255, 255),
 }
 
+color_range = {
+    'red': [(0, 151, 100), (255, 255, 255)], 
+    'green': [(0, 0, 0), (255, 115, 255)], 
+    'blue': [(0, 0, 0), (255, 255, 110)], 
+    'black': [(0, 0, 0), (56, 255, 255)], 
+    'white': [(193, 0, 0), (255, 250, 255)], 
+}
+
 __target_color = ('red')
-# 设置检测颜色
+
 def setTargetColor(target_color):
     global __target_color
 
@@ -35,8 +38,8 @@ def setTargetColor(target_color):
     __target_color = target_color
     return (True, ())
 
-#找出面积最大的轮廓
-#参数为要比较的轮廓的列表
+#Find outlines with the largest area
+#The parameter is a list of outlines to be compared
 def getAreaMaxContour(contours) :
         contour_area_temp = 0
         contour_area_max = 0
@@ -51,13 +54,13 @@ def getAreaMaxContour(contours) :
 
         return area_max_contour, contour_area_max  #返回最大的轮廓
 
-# 夹持器夹取时闭合的角度
+# The angle of closing when clamping the clamp
 servo1 = 500
 
-# 初始位置
+# Initial position
 def initMove():
-    Board.setBusServoPulse(1, servo1 - 50, 300)
-    Board.setBusServoPulse(2, 500, 500)
+    Board.setServoPulse(1, servo1 - 50, 300)
+    Board.setServoPulse(2, 500, 500)
     AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
 def setBuzzer(timer):
@@ -66,7 +69,7 @@ def setBuzzer(timer):
     time.sleep(timer)
     Board.setBuzzer(0)
 
-#设置扩展板的RGB灯颜色使其跟要追踪的颜色一致
+# Set the RGB light color of the expansion board so that it is consistent with the color you want to track
 def set_rgb(color):
     if color == "red":
         Board.RGB.setPixelColor(0, Board.PixelColor(255, 0, 0))
@@ -175,8 +178,8 @@ def move():
                     if not __isRunning:
                         continue
                     servo2_angle = getAngle(world_X, world_Y, rotation_angle) #计算夹持器需要旋转的角度
-                    Board.setBusServoPulse(1, servo1 - 280, 500)  # 爪子张开
-                    Board.setBusServoPulse(2, servo2_angle, 500)
+                    Board.setServoPulse(1, servo1 - 280, 500)  # 爪子张开
+                    Board.setServoPulse(2, servo2_angle, 500)
                     time.sleep(0.5)
                     
                     if not __isRunning:
@@ -186,12 +189,12 @@ def move():
 
                     if not __isRunning:
                         continue
-                    Board.setBusServoPulse(1, servo1, 500)  #夹持器闭合
+                    Board.setServoPulse(1, servo1, 500)  #夹持器闭合
                     time.sleep(0.8)
 
                     if not __isRunning:
                         continue
-                    Board.setBusServoPulse(2, 500, 500)
+                    Board.setServoPulse(2, 500, 500)
                     AK.setPitchRangeMoving((world_X, world_Y, 12), -90, -90, 0, 1000)  #机械臂抬起
                     time.sleep(1)
 
@@ -203,7 +206,7 @@ def move():
                     if not __isRunning:
                         continue                   
                     servo2_angle = getAngle(coordinate[detect_color][0], coordinate[detect_color][1], -90)
-                    Board.setBusServoPulse(2, servo2_angle, 500)
+                    Board.setServoPulse(2, servo2_angle, 500)
                     time.sleep(0.5)
 
                     if not __isRunning:
@@ -218,7 +221,7 @@ def move():
 
                     if not __isRunning:
                         continue
-                    Board.setBusServoPulse(1, servo1 - 200, 500)  # 爪子张开  ，放下物体
+                    Board.setServoPulse(1, servo1 - 200, 500)  # 爪子张开  ，放下物体
                     time.sleep(0.8)
 
                     if not __isRunning:
@@ -236,14 +239,14 @@ def move():
         else:
             if _stop:
                 _stop = False
-                Board.setBusServoPulse(1, servo1 - 70, 300)
+                Board.setServoPulse(1, servo1 - 70, 300)
                 time.sleep(0.5)
-                Board.setBusServoPulse(2, 500, 500)
+                Board.setServoPulse(2, 500, 500)
                 AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
                 time.sleep(1.5)
             time.sleep(0.01)
           
-#运行子线程
+# Run child threads
 th = threading.Thread(target=move)
 th.setDaemon(True)
 th.start()    
@@ -253,6 +256,7 @@ roi = ()
 center_list = []
 last_x, last_y = 0, 0
 draw_color = range_rgb["black"]
+
 def run(img):
     global roi
     global rect
@@ -278,7 +282,7 @@ def run(img):
 
     frame_resize = cv2.resize(img_copy, size, interpolation=cv2.INTER_NEAREST)
     frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
-    #如果检测到某个区域有识别到的物体，则一直检测该区域直到没有为止
+    # If an area is detected with an identified object, the area is detected until there is no
     if get_roi and not start_pick_up:
         get_roi = False
         frame_gb = getMaskROI(frame_gb, roi, size)      
@@ -291,17 +295,17 @@ def run(img):
     if not start_pick_up:
         for i in color_range:
             if i in __target_color:
-                frame_mask = cv2.inRange(frame_lab, color_range[i][0], color_range[i][1])  #对原图像和掩模进行位运算
-                opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6,6),np.uint8))  #开运算
-                closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6,6),np.uint8)) #闭运算
-                contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  #找出轮廓
-                areaMaxContour, area_max = getAreaMaxContour(contours)  #找出最大轮廓
+                frame_mask = cv2.inRange(frame_lab, color_range[i][0], color_range[i][1])  # Perform bit operations on the original image and mask
+                opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6,6),np.uint8))  # Start the operation
+                closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6,6),np.uint8)) # Closed operation
+                contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  # Find out the outline
+                areaMaxContour, area_max = getAreaMaxContour(contours)  # Find the maximum profile
                 if areaMaxContour is not None:
-                    if area_max > max_area:#找最大面积
+                    if area_max > max_area: # Find the maximum area
                         max_area = area_max
                         color_area_max = i
                         areaMaxContour_max = areaMaxContour
-        if max_area > 2500:  # 有找到最大面积
+        if max_area > 2500:  # The maximum area has been found
             rect = cv2.minAreaRect(areaMaxContour_max)
             box = np.intp(cv2.boxPoints(rect))
             

@@ -6,14 +6,14 @@ import time
 import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
-from inverse_kinematics import *
-from ArmIK.Transform import getAngle
+from armpy.armik.InverseKinematics import *
+from armpy.armik.Transform import getAngle
 from mpl_toolkits.mplot3d import Axes3D
-from HiwonderSDK.Board import setBusServoPulse, getBusServoPulse
+from armpy.control.Board import setServoPulse, getServoPulse
 
-#The robotic arm moves according to the angle calculated by inverse kinematics
+#机械臂根据逆运动学算出的角度进行移动
 ik = IK('arm')
-#Set the link length
+#设置连杆长度
 l1 = ik.l1 + 0.75
 l4 = ik.l4 - 0.15
 ik.setLinkLength(L1=l1, L4=l4)
@@ -71,14 +71,14 @@ class ArmIK:
         if movetime is None:
             max_d = 0
             for i in  range(0, 4):
-                d = abs(getBusServoPulse(i + 3) - servos[i])
+                d = abs(getServoPulse(i + 3) - servos[i])
                 if d > max_d:
                     max_d = d
             movetime = int(max_d*4)
-        setBusServoPulse(3, servos[0], movetime)
-        setBusServoPulse(4, servos[1], movetime)
-        setBusServoPulse(5, servos[2], movetime)
-        setBusServoPulse(6, servos[3], movetime)
+        setServoPulse(3, servos[0], movetime)
+        setServoPulse(4, servos[1], movetime)
+        setServoPulse(5, servos[2], movetime)
+        setServoPulse(6, servos[3], movetime)
 
         return movetime
 
@@ -169,8 +169,8 @@ class ArmIK:
 
 if __name__ == "__main__":
     AK = ArmIK()
-    setBusServoPulse(1, 200, 500)
-    setBusServoPulse(2, 500, 500)
+    setServoPulse(1, 200, 500)
+    setServoPulse(2, 500, 500)
     #AK.setPitchRangeMoving((0, 10, 10), -30, -90, 0, 2000)
     #time.sleep(2)
     print(AK.setPitchRangeMoving((-4.8, 15, 1.5), 0, -90, 0, 2000))
