@@ -1,6 +1,6 @@
 import time
 import RPi.GPIO as GPIO
-from armpy.control.BusServoCmd import *
+from control.BusServoCmd import *
 from rpi_ws281x import PixelStrip
 from rpi_ws281x import Color as PixelColor
 import math

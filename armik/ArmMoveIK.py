@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # encoding:utf-8
 import sys
-sys.path.append('/home/gavin/ArmPi/')
+sys.path.append('/home/gavin/lrgpi/')
 import time
 import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
-from armpy.armik.InverseKinematics import *
-from armpy.armik.Transform import getAngle
+from armik.InverseKinematics import *
 from mpl_toolkits.mplot3d import Axes3D
-from armpy.control.Board import setServoPulse, getServoPulse
+from control.Board import setServoPulse, getServoPulse
 
 #机械臂根据逆运动学算出的角度进行移动
 ik = IK('arm')
