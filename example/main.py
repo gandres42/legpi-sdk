@@ -55,6 +55,7 @@ while True:
             for color in SCAN_COLORS:
                 centers = Perception.find_centers_color(frame, color)
                 if centers != []:
+                    print(centers)
                     move_goal = px_to_cm(centers[0])
                     move_color = color
                     robot_state = state.MOVING
@@ -79,7 +80,14 @@ while True:
                 angle = Board.__pulse_to_angle(pulse)
                 times.append(Board.setServoAngle(servo_id, angle, blocking=False, velocity=100))
             time.sleep(max(times))
-            result = AK.setPitchRangeMoving(COLOR_POSITIONS[move_color], -90, -90, 1)
+            result = AK.setPitchRangeMoving(COLOR_POSITIONS[move_color], -90, -90, 10)
+            times = []
+            for i, pulse in enumerate(result[0].values()):
+                servo_id = i + 3
+                angle = Board.__pulse_to_angle(pulse)
+                times.append(Board.setServoAngle(servo_id, angle, blocking=False, velocity=100))
+            time.sleep(max(times))
+            result = AK.setPitchRangeMoving(COLOR_POSITIONS[move_color], -90, -90, 2)
             times = []
             for i, pulse in enumerate(result[0].values()):
                 servo_id = i + 3
