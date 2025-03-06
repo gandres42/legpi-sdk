@@ -101,12 +101,12 @@ class ArmIK:
         return False
 
     def setPitchRangeMoving(self, coordinate_data, alpha, alpha1, alpha2, movetime=None):
-        #给定坐标coordinate_data和俯仰角alpha,以及俯仰角范围的范围alpha1, alpha2，自动寻找最接近给定俯仰角的解，并转到目标位置
-        #如果无解返回False,否则返回舵机角度、俯仰角、运行时间
-        #坐标单位cm， 以元组形式传入，例如(0, 5, 10)
-        #alpha为给定俯仰角
-        #alpha1和alpha2为俯仰角的取值范围
-        #movetime为舵机转动时间，单位ms, 如果不给出时间，则自动计算
+        # Given the coordinates coordinate_data and pitch angle alpha, as well as the range of pitch angle alpha1 and alpha2, automatically find the solution closest to the given pitch angle and go to the target position
+        # If there is no solution, return False, otherwise return the servo angle, pitch angle, and running time
+        # Coordinate unit cm, passed in as tuples, for example (0, 5, 10)
+        # alpha is a given pitch angle
+        # alpha1 and alpha2 are the values ​​of pitch angles
+        # movetime is the rotation time of the servo, unit ms, if time is not given, it will be calculated automatically
         x, y, z = coordinate_data
         result1 = self.setPitchRange((x, y, z), alpha, alpha1)
         result2 = self.setPitchRange((x, y, z), alpha, alpha2)
@@ -125,47 +125,6 @@ class ArmIK:
         movetime = self.servosMove((servos["servo3"], servos["servo4"], servos["servo5"], servos["servo6"]), movetime)
 
         return servos, alpha, movetime
-    '''
-    #for test
-    def drawMoveRange2D(self, x_min, x_max, dx, y_min, y_max, dy, z, a_min, a_max, da):
-        # 测试可到达点, 以2d图形式展现，z固定
-        #测试可到达点, 以3d图形式展现，如果点过多，3d图会比较难旋转
-        try:
-            for y in np.arange(y_min, y_max, dy):
-                for x in np.arange(x_min, x_max, dx):
-                    result = self.setPitchRange((x, y, z), a_min, a_max, da)
-                    if result:
-                        plt.scatter(x, y, s=np.pi, c='r')
-
-            plt.xlabel('X Label')
-            plt.ylabel('Y Label')
-
-            plt.show()
-        except Exception as e:
-            print(e)
-            pass
-
-    def drawMoveRange3D(self, x_min, x_max, dx, y_min, y_max, dy, z_min, z_max, dz, a_min, a_max, da):
-        #测试可到达点, 以3d图形式展现，如果点过多，3d图会比较难旋转
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        try:
-            for z in np.arange(z_min, z_max, dz):
-                for y in np.arange(y_min, y_max, dy):
-                    for x in np.arange(x_min, x_max, dx):
-                        result = self.setPitchRange((x, y, z), a_min, a_max, da)
-                        if result:
-                            ax.scatter(x, y, z, s=np.pi, c='r')
-
-            ax.set_xlabel('X Label')
-            ax.set_ylabel('Y Label')
-            ax.set_zlabel('Z Label')
-
-            plt.show()
-        except Exception as e:
-            print(e)
-            pass
-    '''
 
 if __name__ == "__main__":
     AK = ArmIK()

@@ -9,7 +9,8 @@ sys.path.append('/home/gavin/legpi-sdk')
 from armpy.armik.ArmMoveIK import *
 from armpy.armik.Transform import *
 import armpy.control.Board as Board
-import armpy.perception.Camera as Camera
+from armpy.perception import Camera
+from armpy.perception import Perception
 
 AK = ArmIK()
 
@@ -64,10 +65,15 @@ def initMove():
     AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
 def setBuzzer(timer):
-    Board.setBuzzer(0)
-    Board.setBuzzer(1)
-    time.sleep(timer)
-    Board.setBuzzer(0)
+    # Board.setBuzzer(0)
+    # Board.setBuzzer(1)
+    # time.sleep(timer)
+    # Board.setBuzzer(0)
+    # time.sleep(timer)
+    # Board.setBuzzer(1)
+    # time.sleep(timer)
+    # Board.setBuzzer(0)
+    pass
 
 # Set the RGB light color of the expansion board so that it is consistent with the color you want to track
 def set_rgb(color):
@@ -280,44 +286,57 @@ def run(img):
     if not __isRunning:
         return img
 
-    frame_resize = cv2.resize(img_copy, size, interpolation=cv2.INTER_NEAREST)
-    frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
-    # If an area is detected with an identified object, the area is detected until there is no
-    if get_roi and not start_pick_up:
-        get_roi = False
-        frame_gb = getMaskROI(frame_gb, roi, size)      
-    frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)  # 将图像转换到LAB空间
+    # frame_resize = cv2.resize(img_copy, size, interpolation=cv2.INTER_NEAREST)
+    # frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
+    # # If an area is detected with an identified object, the area is detected until there is no
+    # if get_roi and not start_pick_up:
+    #     get_roi = False
+    #     frame_gb = getMaskROI(frame_gb, roi, size)      
+    # frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)  # 将图像转换到LAB空间
 
-    color_area_max = None
-    max_area = 0
-    areaMaxContour_max = 0
+    # color_area_max = None
+    # max_area = 0
+    # areaMaxContour_max = 0
     
     if not start_pick_up:
-        for i in color_range:
-            if i in __target_color:
-                frame_mask = cv2.inRange(frame_lab, color_range[i][0], color_range[i][1])  # Perform bit operations on the original image and mask
-                opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6,6),np.uint8))  # Start the operation
-                closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6,6),np.uint8)) # Closed operation
-                contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  # Find out the outline
-                areaMaxContour, area_max = getAreaMaxContour(contours)  # Find the maximum profile
-                if areaMaxContour is not None:
-                    if area_max > max_area: # Find the maximum area
-                        max_area = area_max
-                        color_area_max = i
-                        areaMaxContour_max = areaMaxContour
-        if max_area > 2500:  # The maximum area has been found
-            rect = cv2.minAreaRect(areaMaxContour_max)
-            box = np.intp(cv2.boxPoints(rect))
+        # for i in color_range:
+        #     if i in __target_color:
+        #         frame_mask = cv2.inRange(frame_lab, color_range[i][0], color_range[i][1])  # Perform bit operations on the original image and mask
+        #         opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6,6),np.uint8))  # Start the operation
+        #         closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6,6),np.uint8)) # Closed operation
+        #         contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  # Find out the outline
+        #         areaMaxContour, area_max = getAreaMaxContour(contours)  # Find the maximum profile
+        #         if areaMaxContour is not None:
+        #             if area_max > max_area: # Find the maximum area
+        #                 max_area = area_max
+        #                 color_area_max = i
+        #                 areaMaxContour_max = areaMaxContour
+        # if max_area > 2500:  # The maximum area has been found
+        if Perception.find_centers(img) != []:
+        #     rect = cv2.minAreaRect(areaMaxContour_max)
+        #     box = np.intp(cv2.boxPoints(rect))
             
-            roi = getROI(box) #获取roi区域
-            get_roi = True
-            img_centerx, img_centery = getCenter(rect, roi, size, square_length)  # 获取木块中心坐标
+        #     roi = getROI(box) #获取roi区域
+        #     get_roi = True
+        #     img_centerx, img_centery = getCenter(rect, roi, size, square_length)  # 获取木块中心坐标
              
-            world_x, world_y = convertCoordinate(img_centerx, img_centery, size) #转换为现实世界坐标
+        #     world_x, world_y = convertCoordinate(img_centerx, img_centery, size) #转换为现实世界坐标
+            world_X = 0
+            world_Y = 0
+            color_area_max = None
+            for color in ['red', 'green', 'blue']:
+                centers = Perception.find_centers_color(img, color)
+                if centers != []:
+                    world_X = centers[0][0]
+                    world_x = centers[0][0]
+                    world_Y = centers[0][1]
+                    world_y = centers[0][1]
+                    color_area_max = color
+                
             
-            cv2.drawContours(img, [box], -1, range_rgb[color_area_max], 2)
-            cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[color_area_max], 1) #绘制中心点
+            # cv2.drawContours(img, [box], -1, range_rgb[color_area_max], 2)
+            # cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
+            #         cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[color_area_max], 1) #绘制中心点
             
             distance = math.sqrt(pow(world_x - last_x, 2) + pow(world_y - last_y, 2)) #对比上次坐标来判断是否移动
             last_x, last_y = world_x, world_y
@@ -339,7 +358,7 @@ def run(img):
                         start_count_t1 = False
                         t1 = time.time()
                     if time.time() - t1 > 1:
-                        rotation_angle = rect[2] 
+                        # rotation_angle = rect[2] 
                         start_count_t1 = True
                         world_X, world_Y = np.mean(np.array(center_list).reshape(count, 2), axis=0)
                         center_list = []

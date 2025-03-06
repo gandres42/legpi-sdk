@@ -208,15 +208,15 @@ def setServoPulse(id, pulse, use_time):
     use_time = 30000 if use_time > 30000 else use_time
     serial_serro_wirte_cmd(id, LOBOT_SERVO_MOVE_TIME_WRITE, pulse, use_time)
 
-def getMotorAngle(id):
+def getServoAngle(id):
     return __pulse_to_angle(getServoPulse(id))
 
-def setMotorAngle(motor_id, angle, velocity=50, blocking=True, degrees=True):
+def setServoAngle(motor_id, angle, velocity=50, blocking=False, degrees=True):
     if not degrees: angle = math.degrees(angle)
     
     # unique motor joint restraints
     if motor_id == 1: return
-    if motor_id in [3, 5, 6]: angle = -angle
+    # if motor_id in [3, 5, 6]: angle = -angle
     
     # convert velocity to ms
     # start_degree = (getServoPulse(motor_id) - 130) * (180 / (870 - 130)) - 90

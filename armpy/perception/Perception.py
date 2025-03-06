@@ -4,9 +4,6 @@ import os
 
 SCAN_COLORS = ['blue', 'red', 'green']
 
-# Start video capture
-cap = cv2.VideoCapture(0)
-
 def find_centers_color(frame, color):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     masks = []
@@ -44,6 +41,9 @@ def find_centers(frame):
     return centers
 
 if __name__ == "__main__":
+    # Start video capture
+    cap = cv2.VideoCapture(0)
+
     while True:
         ret, frame = cap.read()
         if not ret:
