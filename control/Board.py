@@ -216,7 +216,7 @@ def setServoAngle(motor_id, angle, velocity=50, blocking=False, degrees=True):
     
     # unique motor joint restraints
     if motor_id == 1: return
-    # if motor_id in [3, 5, 6]: angle = -angle
+    if motor_id in [3, 5, 6]: angle = -angle
     
     # convert velocity to ms
     # start_degree = (getServoPulse(motor_id) - 130) * (180 / (870 - 130)) - 90
